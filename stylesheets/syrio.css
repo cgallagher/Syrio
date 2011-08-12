@@ -1,0 +1,35 @@
+#modal_overlay{
+	width: 100%;
+	height: 100%;
+	z-index: 98;
+	background-color: #000;
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	display: none;
+}
+
+#modal_display{
+	position: absolute;
+	left: 100px;
+	top: 0px;
+	height: 800px;
+	width: 600px;
+	background-color: #fff;
+	border: 10px solid #ccc;
+	z-index: 99;
+	display: none;
+}
+
+#syrio_bar{
+	float: left;
+	width: 100%;
+	height: 20px;
+	background-color: orange;
+	border-bottom: pink solid 3px;
+}
+
+#modal_content{
+	float: left;
+	width: 100%;
+}

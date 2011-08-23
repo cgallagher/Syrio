@@ -2,11 +2,7 @@
 // Syrio - The First Sword to the Sealord of Braavos
 // version 0.1.1, 09 August 2011
 // by Chris Gallagher
-
-
 //$.syrio("", {html_content: gallery_item_html, parse_fbml: true }, function(){});
-
-// remember to change every instance of "pluginName" to the name of your plugin!
 (function($) {
     $.syrio = function(element, options) {
         var defaults = {
@@ -23,8 +19,8 @@
         var plugin = this;
         plugin.settings = {}
 
-        var $element = $(element),  // reference to the jQuery version of DOM element the plugin is attached to
-             element = element;        // reference to the actual DOM element
+        var $element = $(element),
+             element = element;
         plugin.init = function() {
             plugin.settings = $.extend({}, defaults, options);
 
@@ -37,7 +33,6 @@
 							plugin.parse_fbml();
 						});
         },
-
 
 				plugin.close_controls = function(){
 					if (plugin.settings.close_enabled){
@@ -57,7 +52,6 @@
 					else{
 						$("#close_modal").hide();
 					}
-					
 				},
 				
 				plugin.set_modal_title = function(){
@@ -67,16 +61,18 @@
         plugin.centre_the_modal = function(callback){
 	        var modal_ele = $("#" + plugin.settings.modal_div);
 					//this part is facebook specfic - if not in facebook then use scrolltop.
-					var page_info = FB.Canvas.getPageInfo()	
-					$(modal_ele).css({top : page_info.scrollTop + "px"});
-					$(modal_ele).css("left", (($(window).width() - modal_ele.outerWidth()) / 2) + $(window).scrollLeft() + "px");
-					callback();
+					var page_info;
+			    FB.Canvas.getPageInfo(function(info){
+			        page_info = info;
+			        $(modal_ele).css({top : page_info.scrollTop + "px"});
+			        $(modal_ele).css("left", (($(window).width() - modal_ele.outerWidth()) / 2) + $(window).scrollLeft() + "px");
+			        callback();
+			    });
         },
 
         plugin.show_overlay = function() {
             $("#" + plugin.settings.overlay_div).show();
 						$("#" + plugin.settings.modal_div).show();	
-
         },
 
 				plugin.append_html_content = function() {
@@ -84,7 +80,7 @@
 						$("#modal_content").html(plugin.settings.html_content);
 					}
 					else{
-						var whatdowesaytothegodsofdeath = '<img src="http://gifninja.com/animatedgifs/155468/syrio-forel.gif" />'
+						var whatdowesaytothegodsofdeath = '<img src="http://gifninja.com/animatedgifs/155468/syrio-forel.gif" />';
 						$("#modal_content").html(whatdowesaytothegodsofdeath);
 					}
 				},
@@ -103,9 +99,7 @@
 					$("#" + plugin.settings.overlay_div).hide();
 					$("#" + plugin.settings.modal_div).hide();
 				}
-				
         plugin.init();
-
     }
 
     $.fn.syrio = function(options) {
@@ -113,11 +107,8 @@
             if (undefined == $(this).data('syrio')) {
                 var plugin = new $.syrio(this, options);
                 $(this).data('syrio', plugin);
-
             }
-
         });
-
     }
 
 })(jQuery);

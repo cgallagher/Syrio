@@ -1,7 +1,10 @@
 // jQuery Plugin for really basic modal window effects
 // Syrio - The First Sword to the Sealord of Braavos
-// version 0.1, 09 August 2011
-// by Chris Gallagher - http://www.betapond.com
+// version 0.1.1, 09 August 2011
+// by Chris Gallagher
+
+
+//$.syrio("", {html_content: gallery_item_html, parse_fbml: true }, function(){});
 
 // remember to change every instance of "pluginName" to the name of your plugin!
 (function($) {
@@ -12,7 +15,7 @@
 						modal_div:     'modal_display',
 						close_button : 'close_modal',
 						close_enabled: true,
-						modal_title: "Alert",
+						modal_title: "",
 						parse_fbml: false,
 						html_content: ""
         }
@@ -37,7 +40,6 @@
 
 
 				plugin.close_controls = function(){
-					
 					if (plugin.settings.close_enabled){
 						$("#" + plugin.settings.overlay_div).click(function(){
 							plugin.close_all();
@@ -81,6 +83,10 @@
 					if (plugin.settings.html_content != ""){
 						$("#modal_content").html(plugin.settings.html_content);
 					}
+					else{
+						var whatdowesaytothegodsofdeath = '<img src="http://gifninja.com/animatedgifs/155468/syrio-forel.gif" />'
+						$("#modal_content").html(whatdowesaytothegodsofdeath);
+					}
 				},
 
 				plugin.bind_control_clicks = function() {
@@ -107,9 +113,11 @@
             if (undefined == $(this).data('syrio')) {
                 var plugin = new $.syrio(this, options);
                 $(this).data('syrio', plugin);
+
             }
 
         });
+
     }
 
 })(jQuery);

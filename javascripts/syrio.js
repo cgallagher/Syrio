@@ -63,7 +63,7 @@
 						var overlay = $("<div />").attr("id", plugin.settings.overlay_div);
 						$('body').prepend(overlay);
 					}
-				}
+				},
 				
 				plugin.set_modal_title = function(){
 					if(plugin.settings.modal_title !== "")

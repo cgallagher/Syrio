@@ -13,7 +13,10 @@
 						close_enabled: true,
 						modal_title: "",
 						parse_fbml: false,
-						html_content: ""
+						html_content: "",
+						overlay: false,
+						after_open: function(){ /** nothing **/ },
+						after_close: function(){ /** nothing **/ }
         }
 
         var plugin = this;
@@ -31,6 +34,7 @@
 							plugin.append_html_content();
 							plugin.bind_control_clicks();
 							plugin.parse_fbml();
+							plugin.settings.after_open(plugin);
 						});
         },
 
@@ -54,8 +58,16 @@
 					}
 				},
 				
+				plugin.add_overlay = function(){
+					if($('#' + plugin.settings.overlay_div).length < 1){
+						var overlay = $("<div />").attr("id", plugin.settings.overlay_div);
+						$('body').prepend(overlay);
+					}
+				},
+				
 				plugin.set_modal_title = function(){
-					$("#syrio_title").html(plugin.settings.modal_title);
+					if(plugin.settings.modal_title !== "")
+						$("#syrio_title").html(plugin.settings.modal_title);
 				},
 				
         plugin.centre_the_modal = function(callback){
@@ -71,6 +83,7 @@
         },
 
         plugin.show_overlay = function() {
+						if(plugin.settings.overlay == true) plugin.add_overlay();
             $("#" + plugin.settings.overlay_div).show();
 						$("#" + plugin.settings.modal_div).show();	
         },
@@ -98,6 +111,7 @@
 				plugin.close_all = function() {
 					$("#" + plugin.settings.overlay_div).hide();
 					$("#" + plugin.settings.modal_div).hide();
+					plugin.settings.after_close(plugin);
 				}
         plugin.init();
     }

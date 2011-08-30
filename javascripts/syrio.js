@@ -76,13 +76,11 @@
 					var page_info;
 					//hackety hack hack hack for bug - http://bugs.developers.facebook.net/show_bug.cgi?id=19946
 					if (document.location.protocol === "https:"){
-						console.log("x")
 						$(modal_ele).css({top : "20px"});
 		        $(modal_ele).css("left", (($(window).width() - modal_ele.outerWidth()) / 2) + $(window).scrollLeft() + "px");
 						callback();
 					}
 					else{
-						console.log("y")
 						FB.Canvas.getPageInfo(function(info){
 				        page_info = info;
 				        $(modal_ele).css({top : page_info.scrollTop + "px"});

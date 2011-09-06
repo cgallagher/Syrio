@@ -1,128 +1,175 @@
-// jQuery Plugin for really basic modal window effects
-// Syrio - The First Sword to the Sealord of Braavos
-// version 0.1.1, 09 August 2011
-// by Chris Gallagher
-//$.syrio("", {html_content: gallery_item_html, parse_fbml: true }, function(){});
-(function($) {
-    $.syrio = function(element, options) {
-        var defaults = {
+if(!com) var com = {};
+if(!com.betapond) com.betapond = {};
 
-            overlay_div:   'modal_overlay',
-						modal_div:     'modal_display',
-						close_button : 'close_modal',
-						close_enabled: true,
-						modal_title: "",
-						parse_fbml: false,
-						html_content: "",
-						overlay: false,
-						after_open: function(){ /** nothing **/ },
-						after_close: function(){ /** nothing **/ }
-        }
+com.betapond.photo_claim = function(options){
+	
+	var defaults = {
+	};
+	var _t = this;
+	this.settings = $.extend({}, defaults, options);
+	
+	this.current_photo = null;
+	this.photosets = $('.photosets li.photoset');
+	this.photos = $('.photos a.photo[rel=photoset]');
+	this.claim_form = $('.photos form');
+	this.claim_button = $('<button class="claim_button">'+I18n.claim_button_text+'</button>').click(function(){_t.claim_current_photo();});
+	this.entry_form = $('.new_entry form');
+	this.time_form = $('form#filter_time');
+	this.form_errors = [];
+	//init fbapp
+	this.fb = new com.betapond.bookface({perms:Settings.facebook.permissions.split(/, ?/)});
+	this.fb.init(function(){ _t.init(); });
+};
 
-        var plugin = this;
-        plugin.settings = {}
-
-        var $element = $(element),
-             element = element;
-        plugin.init = function() {
-            plugin.settings = $.extend({}, defaults, options);
-
-            plugin.centre_the_modal(function(){
-							plugin.close_controls();
-							plugin.set_modal_title();
-							plugin.show_overlay();
-							plugin.append_html_content();
-							plugin.bind_control_clicks();
-							plugin.parse_fbml();
-							plugin.settings.after_open(plugin);
-						});
-        },
-
-				plugin.close_controls = function(){
-					if (plugin.settings.close_enabled){
-						$("#" + plugin.settings.overlay_div).click(function(){
-							plugin.close_all();
-						});
-
-						$("#" + plugin.settings.close_button).click(function(){
-							plugin.close_all();
-						});
-
-						$(document).keyup(function(e) {
-						  if (e.keyCode == 13) { plugin.close_all(); } 
-						  if (e.keyCode == 27) { plugin.close_all(); } 
-						});	
+com.betapond.photo_claim.prototype = {
+	init: function(){
+		_t = this;
+		
+		$('a.vote').click(function(e){e.preventDefault(); _t.vote(this);});
+		
+		$.syrio('.photos a.photo', {
+			html_content: function(clicked){ return _t.modal_content_for(clicked) },
+			parse_fbml:true,
+			overlay: false,
+			after_open: function(el){
+				_t.current_photo = el;
+			}
+		});
+		
+		this.entry_form.submit(function(){ return _t.validate_entry_form(this); });
+		
+		this.time_form.find('#time').change(function(){
+			_t.time_form.submit();
+		});
+		
+		$("#close_flash").click(function(){
+			$("#flash_messages").fadeOut("slow");
+		});
+		
+		
+		_t.share_claimed_photo();
+		
+	},
+	
+	modal_content_for: function(element){
+		var photo = $(element);
+		if(photo.hasClass('claimed')){
+			var photo_id = element.id.match(/photo_([0-9]+)/)[1];
+			var response = null;
+			$.ajax({url:'/entries/' + photo_id + '?nolayout=true', async:false, success: function(data){
+				response = data;
+			}});
+			return response;
+		}
+		else{
+			var content = $('<div />').addClass('modal_claim');
+			var image = $('<img width="500" height="333"/>').attr('src', photo.attr('href'));
+			var title = $('<h3 />').text(photo.find('span').text());
+			var claim_text = $('<div class="claim_text" />').html(I18n.claim_text);
+			return content.append(image, title, claim_text, this.claim_button);
+		}
+	},
+	
+	share_claimed_photo: function(){
+		var _t = this;
+		var cta_link = $("#photo_link").val();
+		var thumbnail_src = $("#thumbnail_src").val();
+		
+		if ($('#share_my_photo').val() === "true"){
+			FB.ui(
+	    {
+	      method: 'stream.publish',
+	      attachment: {
+	        name: I18n.claimed.title,
+	        caption: I18n.claimed.caption,
+	        description: I18n.claimed.description,
+	        href: cta_link,
+	        media: [
+	          {
+	            type: 'image',
+	            href: cta_link,
+	            src: thumbnail_src
+	          }
+	        ]
+	      },
+	      action_links: [
+	        { 
+						text: I18n.claimed.cta_label, 
+						href: cta_link
 					}
-					else{
-						$("#close_modal").hide();
-					}
+	      ]
+	    },
+	    function() {
+	    });
+		}
+	},
+	
+	claim_current_photo: function(){
+		var photo_id = this.current_photo.id.match(/photo_([0-9]+)/)[1];
+		this.claim_form.get(0).photo_id.value = photo_id;
+		if( confirm(I18n.claim_confirm_message)){
+			var _t = this;
+			this.fb.while_connected(function(){
+				var user_field = $('<input type="hidden" name="user[fbid]" />').val(_t.fb.login.session.uid);
+				var access_token = $('<input type="hidden" name="user[access_token]" />').val(_t.fb.login.session.access_token);
+				_t.claim_form.append(user_field, access_token);
+				var spinner = new Spinner({
+				  lines: 12, // The number of lines to draw
+				  length: 20, // The length of each line
+				  width: 7, // The line thickness
+				  radius: 10, // The radius of the inner circle
+				  color: '#fff', // #rbg or #rrggbb
+				  speed: 1, // Rounds per second
+				  trail: 100, // Afterglow percentage
+				  shadow: true // Whether to render a shadow
+				}).spin();
+				var spinner_container = $("<div class='spinner' />");
+				$('#modal_content').append(spinner_container);
+				spinner_container.get(0).appendChild(spinner.el);
+				$('.claim_button').attr("disabled", "disabled");
+				_t.claim_form.submit();
+			});
+		}
+	},
+	
+	validate_entry_form: function(form){
+		this.form_errors = [];
+		$(form).find('input[name=_method]').remove();
+		return (this.form_errors.length > 0) ? false : true;
+	},
+	
+	vote: function(el){
+		var _t = this;
+		var link = $(el);
+		var photo_id = link.attr('rel').match(/photo_([0-9]+)/)[1];
+		var phase = '';
+		var matches = false;
+		if(matches = link.attr('class').match(/phase_[0-9]+/)){
+			phase = matches[0];
+			this.fb.while_connected(
+				function(){
+					var params = {
+						phase: phase,
+						fbid: _t.fb.login.session.uid
+					};
+					$.post('/photos/'+photo_id+'/vote', params, function(data){ _t.after_vote(data, link, photo_id);});
 				},
-				
-				plugin.add_overlay = function(){
-					if($('#' + plugin.settings.overlay_div).length < 1){
-						var overlay = $("<div />").attr("id", plugin.settings.overlay_div);
-						$('body').prepend(overlay);
-					}
-				},
-				
-				plugin.set_modal_title = function(){
-					if(plugin.settings.modal_title !== "")
-						$("#syrio_title").html(plugin.settings.modal_title);
-				},
-				
-        plugin.centre_the_modal = function(callback){
-	        var modal_ele = $("#" + plugin.settings.modal_div);
-					//this part is facebook specfic - if not in facebook then use scrolltop.
-					var page_info;
-			    FB.Canvas.getPageInfo(function(info){
-			        page_info = info;
-			        $(modal_ele).css({top : page_info.scrollTop + "px"});
-			        $(modal_ele).css("left", (($(window).width() - modal_ele.outerWidth()) / 2) + $(window).scrollLeft() + "px");
-			        callback();
-			    });
-        },
-
-        plugin.show_overlay = function() {
-						if(plugin.settings.overlay == true) plugin.add_overlay();
-            $("#" + plugin.settings.overlay_div).show();
-						$("#" + plugin.settings.modal_div).show();	
-        },
-
-				plugin.append_html_content = function() {
-					if (plugin.settings.html_content != ""){
-						$("#modal_content").html(plugin.settings.html_content);
-					}
-					else{
-						var whatdowesaytothegodsofdeath = '<img src="http://gifninja.com/animatedgifs/155468/syrio-forel.gif" />';
-						$("#modal_content").html(whatdowesaytothegodsofdeath);
-					}
-				},
-
-				plugin.bind_control_clicks = function() {
-					
-				},
-				
-				plugin.parse_fbml = function() {
-					if (plugin.settings.parse_fbml){
-						FB.XFBML.parse(document.getElementById('modal_content'));
-					}
-				},
-				
-				plugin.close_all = function() {
-					$("#" + plugin.settings.overlay_div).hide();
-					$("#" + plugin.settings.modal_div).hide();
-					plugin.settings.after_close(plugin);
-				}
-        plugin.init();
-    }
-
-    $.fn.syrio = function(options) {
-        return this.each(function() {
-            if (undefined == $(this).data('syrio')) {
-                var plugin = new $.syrio(this, options);
-                $(this).data('syrio', plugin);
-            }
-        });
-    }
-
-})(jQuery);
+				{with_permissions:[]} //basic perms needed only
+			);
+		}
+		else{
+			alert('Sorry, there was an error. Your vote could not be counted. - Competition Phase Error')
+			return false;
+		}
+	},
+	
+	after_vote: function(data, link, photo_id){
+		if(data.status == 'error'){
+			alert(data.error);
+		}
+		else{
+			link.addClass('voted').unbind('click');
+			link.find('#photo_' + photo_id + '_votes_count').text(data.votes);
+		}
+	}
+};

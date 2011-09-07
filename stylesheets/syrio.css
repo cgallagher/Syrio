@@ -33,3 +33,33 @@
 	float: left;
 	width: 100%;
 }
+
+.syrio_next, .syrio_prev{
+	width:33%;
+	position:absolute;
+	top:0px;
+	cursor:pointer;
+	z-index:105;
+	background:transparent url(../images/transparent.png);
+}
+
+.syrio_next{
+	right:0px;
+	text-align:right;
+}
+
+.syrio_next.last, .syrio_prev.first{
+	display:none;
+}
+
+.syrio_next span, .syrio_prev span{
+	display:none;
+}
+
+.syrio_next.hover{
+	background:transparent url(../images/nextlabel.gif) right center no-repeat;
+}
+
+.syrio_prev.hover{
+	background:transparent url(../images/prevlabel.gif) left center no-repeat;
+}

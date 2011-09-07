@@ -143,6 +143,7 @@
 			    
         };
 
+
         plugin.show_overlay = function() {
 						if(plugin.settings.overlay == true) plugin.add_overlay();
             $("#" + plugin.settings.overlay_div).show();
@@ -164,6 +165,7 @@
 						$(clicked).addClass('syrio_active');
 					}
 				};
+
 
 				plugin.bind_control_clicks = function() {
 					
